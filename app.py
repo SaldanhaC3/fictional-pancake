@@ -63,7 +63,7 @@ def main():
         word_count = Counter(all_titles.split())
 
         # Remove common stop words
-        stop_words = set(['a', 'e', 'o', 'de', 'da', 'do', 'em', 'para', 'com', 'por', 'que', 'na', 'no', 'as', 'os', 'uma', 'um', 'tem', 'também', 'se', 'são', 'é', 'este', 'esta','ao','mais','ser','ter', 'foi', 'como', 'veja', 'pode', 'deve, 'deverá', 'com' ])
+        stop_words = set(['a', 'e', 'o', 'de', 'da', 'do', 'em', 'para', 'com', 'por', 'que', 'na', 'no', 'as', 'os', 'uma', 'um', 'tem', 'também', 'se', 'são', 'é', 'este', 'esta', 'ao', 'mais', 'ser', 'ter', 'foi', 'como', 'veja', 'pode', 'deve', 'deverá'])
         filtered_word_count = {word: count for word, count in word_count.items() if word.lower() not in stop_words}
         sorted_word_count = Counter(filtered_word_count)
 
