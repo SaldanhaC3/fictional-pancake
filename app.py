@@ -1,16 +1,47 @@
 import streamlit as st
+import requests
+from bs4 import BeautifulSoup
+from collections import Counter
+import re
+
+# Função de scraping para iCarros
+def fetch_icarros():
+    url = "https://www.icarros.com.br/noticias/arquivo.jsp"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    }
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    news = []
+    
+    # Seleciona os elementos <ul> com a classe 'listahorizontalarquivo'
+    articles = soup.find_all('ul', class_='listahorizontalarquivo')
+
+    for item in articles[:10]:  # Limita a 10 notícias
+        # Seleciona o elemento <a> com o link e o título
+        link_element = item.find('a')
+        title_element = item.find('h1')
+        if link_element and title_element:
+            title = title_element.get_text(strip=True)
+            link = link_element['href']
+            if not link.startswith('http'):
+                link = "https://www.icarros.com.br" + link
+            news.append({"title": title, "link": link})
+
+    return news
+
+# Funções de scraping para outras fontes de notícias
 from news_scraper import (
     fetch_automaistv, fetch_autopapo, fetch_motor1, fetch_quatrorodas,
     fetch_autoo, fetch_mobiauto, fetch_motoo, fetch_motociclismo, fetch_autoesporte
 )
-from collections import Counter
-import re
 
 def main():
     st.title("Últimas Notícias Automotivas")
-    st.write("Confira as 10 últimas notícias publicadas nos sites AutoMaisTV, AutoPapo, Motor1, Quatro Rodas, Autoo, Mobiauto, Motoo, Motociclismo e Autoesporte.")
+    st.write("Confira as 10 últimas notícias publicadas nos sites AutoMaisTV, AutoPapo, Motor1, Quatro Rodas, Autoo, Mobiauto, Motoo, Motociclismo, Autoesporte e iCarros.")
 
-    # Sidebar for source selection
+    # Sidebar para seleção de fontes
     st.sidebar.header("Selecione as Fontes de Notícias")
     sources = {
         "AutoMaisTV": fetch_automaistv,
@@ -22,6 +53,7 @@ def main():
         "Motoo": fetch_motoo,
         "Motociclismo": fetch_motociclismo,
         "Autoesporte": fetch_autoesporte,
+        "iCarros": fetch_icarros,  # Adiciona o iCarros à lista de fontes
     }
 
     selected_sources = []
@@ -29,7 +61,7 @@ def main():
         if st.sidebar.checkbox(source_name, value=True):
             selected_sources.append(source_name)
 
-    # Search functionality
+    # Função de busca por palavras-chave
     search_query = st.sidebar.text_input("Buscar notícias por palavras-chave")
 
     def filter_news(news_list, query):
@@ -56,13 +88,13 @@ def main():
                 except Exception as e:
                     st.write(f"Erro ao carregar notícias do {source}: {e}")
 
-    # Generate term frequency list
+    # Geração de lista de termos mais frequentes
     if all_news:
         all_titles = " ".join(news['title'] for news in all_news)
         all_titles = re.sub(r'[^a-zA-Z0-9\s]', '', all_titles)
         word_count = Counter(all_titles.split())
 
-        # Remove common stop words
+        # Remover palavras comuns
         stop_words = set(['a', 'e', 'o', 'de', 'da', 'do', 'em', 'para', 'com', 'por', 'que', 'na', 'no', 'as', 'os', 'uma', 'um', 'tem', 'também', 'se', 'são', 'é', 'este', 'esta', 'ao', 'mais', 'ser', 'ter', 'foi', 'como', 'veja', 'pode', 'deve', 'deverá'])
         filtered_word_count = {word: count for word, count in word_count.items() if word.lower() not in stop_words}
         sorted_word_count = Counter(filtered_word_count)
