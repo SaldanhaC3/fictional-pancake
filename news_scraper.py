@@ -75,12 +75,14 @@ def fetch_mobiauto():
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
     news = []
-    for item in soup.find_all('div', class_='mui-style-d8mvmb')[:10]:
-        title_element = item.find('h3', class_='mui-style-v8880f')
-        link_element = item.find_parent('a')
+    for item in soup.find_all('div', class_='css-gkqbc')[:10]:
+        link_element = item.find('a', href=True)
+        title_element = item.find('h3', class_='css-v8880f')
         if title_element and link_element:
             title = title_element.get_text(strip=True)
             link = link_element['href']
+            if not link.startswith('http'):
+                link = "https://www.mobiauto.com.br" + link
             news.append({"title": title, "link": link})
     return news
 
@@ -100,16 +102,26 @@ def fetch_motoo():
 
 def fetch_motociclismo():
     url = "https://motociclismoonline.com.br/noticias/"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    }
+    response = requests.get(url, headers=headers)
+    response.encoding = 'utf-8'  # Corrigindo problemas de encoding
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
     news = []
-    for item in soup.find_all('div', class_='col-12 media-body')[:10]:
+
+    articles = soup.find_all('article', class_='col-12 col-lg-4 pb-5 media-section')
+    for item in articles:
         title_element = item.find('h2', class_='card-title').find('a')
-        link_element = title_element
-        if title_element and link_element:
+        if title_element:
             title = title_element.get_text(strip=True)
-            link = link_element['href']
+            link = title_element['href']
+            if not link.startswith('http'):
+                link = "https://motociclismoonline.com.br" + link
             news.append({"title": title, "link": link})
+
     return news
 
 def fetch_autoesporte():
@@ -127,7 +139,7 @@ def fetch_autoesporte():
     return news
 
 if __name__ == "__main__":
-    # Testando as funções
+    # Testando as funções de scraping de notícias
     print("AutoMaisTV News:")
     automaistv_news = fetch_automaistv()
     for article in automaistv_news:
