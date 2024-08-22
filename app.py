@@ -4,9 +4,9 @@ from bs4 import BeautifulSoup
 from collections import Counter
 import re
 
-# Função de scraping para iCarros
-def fetch_icarros():
-    url = "https://www.icarros.com.br/noticias/arquivo.jsp"
+# Função de scraping para o UOL Carros
+def fetch_uol_carros():
+    url = "https://www.uol.com.br/carros/ultimas/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     }
@@ -15,18 +15,16 @@ def fetch_icarros():
 
     news = []
     
-    # Seleciona os elementos <ul> com a classe 'listahorizontalarquivo'
-    articles = soup.find_all('ul', class_='listahorizontalarquivo')
+    articles = soup.find_all('div', class_='thumbnails-item')
 
     for item in articles[:10]:  # Limita a 10 notícias
-        # Seleciona o elemento <a> com o link e o título
         link_element = item.find('a')
-        title_element = item.find('h1')
+        title_element = item.find('h3', class_='thumb-title')
         if link_element and title_element:
             title = title_element.get_text(strip=True)
             link = link_element['href']
             if not link.startswith('http'):
-                link = "https://www.icarros.com.br" + link
+                link = "https://www.uol.com.br" + link
             news.append({"title": title, "link": link})
 
     return news
@@ -34,12 +32,12 @@ def fetch_icarros():
 # Funções de scraping para outras fontes de notícias
 from news_scraper import (
     fetch_automaistv, fetch_autopapo, fetch_motor1, fetch_quatrorodas,
-    fetch_autoo, fetch_mobiauto, fetch_motoo, fetch_motociclismo, fetch_autoesporte
+    fetch_autoo, fetch_mobiauto, fetch_motoo, fetch_motociclismo, fetch_autoesporte, fetch_icarros
 )
 
 def main():
     st.title("Últimas Notícias Automotivas")
-    st.write("Confira as 10 últimas notícias publicadas nos sites AutoMaisTV, AutoPapo, Motor1, Quatro Rodas, Autoo, Mobiauto, Motoo, Motociclismo, Autoesporte e iCarros.")
+    st.write("Confira as 10 últimas notícias publicadas nos sites AutoMaisTV, AutoPapo, Motor1, Quatro Rodas, Autoo, Mobiauto, Motoo, Motociclismo, Autoesporte, iCarros e UOL Carros.")
 
     # Sidebar para seleção de fontes
     st.sidebar.header("Selecione as Fontes de Notícias")
@@ -54,6 +52,7 @@ def main():
         "Motociclismo": fetch_motociclismo,
         "Autoesporte": fetch_autoesporte,
         "iCarros": fetch_icarros,  # Adiciona o iCarros à lista de fontes
+        "UOL Carros": fetch_uol_carros,  # Adiciona o UOL Carros à lista de fontes
     }
 
     selected_sources = []
